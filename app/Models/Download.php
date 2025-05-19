@@ -14,7 +14,9 @@ class Download extends Model
         'filters',
         'user',
         'total_records',
-        'expires_at'
+        'expires_at',
+        'selectedDb',
+        'user_id'
     ];
 
     protected $casts = [

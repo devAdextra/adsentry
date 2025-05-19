@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Download;
 use Illuminate\Http\Request;
+use App\Jobs\GenerateDownloadFileJob;
 
 class DownloadController extends Controller
 {
@@ -23,6 +24,29 @@ class DownloadController extends Controller
         return view('downloads.index', compact('downloads'));
     }
 
+    public function generate(Request $request)
+    {
+        // Validazione input
+        $request->validate([
+            'selectedDb' => 'required|string',
+            'filters' => 'required|array',
+        ]);
+
+        // Crea una riga download (stato: processing)
+        $download = Download::create([
+            'original_filename' => 'export_' . now()->format('Ymd_His') . '.csv',
+            'filters' => $request->filters,
+            'selectedDb' => $request->selectedDb,
+            'user_id' => auth()->id() ?? null,
+            'status' => 'processing',
+        ]);
+
+        // Avvia un job per la generazione del file (opzionale, consigliato)
+        dispatch(new GenerateDownloadFileJob($download));
+
+        return response()->json(['success' => true]);
+    }
+
     public function destroy(Download $download)
     {
         // Elimina il file fisico
@@ -34,5 +58,13 @@ class DownloadController extends Controller
         
         return redirect()->route('downloads.index')
             ->with('success', 'Download eliminato con successo.');
+    }
+
+    public function download(Download $download)
+    {
+        if ($download->status !== 'completed' || !$download->filename) {
+            abort(404);
+        }
+        return response()->download(storage_path('app/' . $download->filename));
     }
 } 

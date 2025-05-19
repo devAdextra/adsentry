@@ -7,6 +7,7 @@ use App\Models\Movement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Services\LeadScoringService;
 
 class ScoreController extends Controller
 {
@@ -45,16 +46,17 @@ class ScoreController extends Controller
                     UserActions AS (
                         SELECT 
                             m.user_id,
-                            MAX(m.db) as db,
+                            m.db,
                             COUNT(DISTINCT CASE WHEN m.timeActionOpen IS NOT NULL THEN m.timeActionOpen END) as open_count,
                             COUNT(DISTINCT CASE WHEN m.timeActionClick IS NOT NULL THEN m.timeActionClick END) as click_count
                         FROM movements m
                         INNER JOIN FilteredUsers fu ON m.user_id = fu.user_id
-                        GROUP BY m.user_id
+                        GROUP BY m.user_id, m.db
                     ),
                     ScoreCalculation AS (
                         SELECT 
                             user_id,
+                            db,
                             CASE
                                 WHEN (open_count + (click_count * 2)) = 0 THEN 1
                                 WHEN (open_count + (click_count * 2)) <= 5 THEN 2
@@ -180,74 +182,11 @@ class ScoreController extends Controller
         Cache::tags(['scores'])->flush();
     }
 
-    public function downloadFilteredLeads(Request $request)
+    public function getLeadsByScore(Request $request, LeadScoringService $scoringService)
     {
-        try {
-            $filters = $request->only(['macro', 'micro', 'nano', 'extra']);
-            
-            // Nome del file
-            $filename = 'leads_export_' . date('Ymd_His') . '.csv';
-            $handle = fopen($filename, 'w');
-            
-            // Intestazione
-            fputcsv($handle, ['Email', 'DB']);
-            
-            // Processa i risultati in batch
-            $offset = 0;
-            $batchSize = 1000;
-            
-            do {
-                $query = "WITH FilteredMovements AS (
-                    SELECT m.user_id, m.db
-                    FROM movements m
-                    WHERE m.db IS NOT NULL";
-                
-                $params = [];
-                
-                // Aggiungi i filtri
-                foreach ($filters as $field => $value) {
-                    if (!empty($value) && $value !== 'Tutti') {
-                        $query .= " AND m.$field = ?";
-                        $params[] = trim(explode('(', $value)[0]);
-                    }
-                }
-                
-                $query .= ")
-                SELECT DISTINCT l.email, fm.db
-                FROM FilteredMovements fm
-                JOIN leads l ON fm.user_id = l.id
-                ORDER BY l.email, fm.db
-                LIMIT ? OFFSET ?";
-                
-                $params[] = $batchSize;
-                $params[] = $offset;
-                
-                $results = DB::select($query, $params);
-                
-                // Scrivi i risultati nel file
-                foreach ($results as $row) {
-                    fputcsv($handle, [$row->email, $row->db]);
-                }
-                
-                $offset += $batchSize;
-                $hasMore = count($results) === $batchSize;
-                
-            } while ($hasMore);
-            
-            fclose($handle);
-            
-            return response()->download($filename)->deleteFileAfterSend(true);
-            
-        } catch (\Exception $e) {
-            \Log::error('Errore nel download delle lead:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        $filters = $request->only(['macro', 'micro', 'nano', 'extra', 'score']);
+        $selectedDb = $request->input('db');
+        $leads = $scoringService->getLeadsByScore($filters, $selectedDb);
+        return response()->json(['leads' => $leads]);
     }
 }

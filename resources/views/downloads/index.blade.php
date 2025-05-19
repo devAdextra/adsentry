@@ -28,10 +28,10 @@
                     <div class="d-flex gap-2">
                         <input type="text" class="form-control form-control-sm" placeholder="Cerca..." id="searchInput">
                         <select class="form-select form-select-sm" id="statusFilter">
-                            <option value="">Tutti gli stati</option>
-                            <option value="processing">In elaborazione</option>
-                            <option value="completed">Completato</option>
-                            <option value="failed">Fallito</option>
+                            <option value="" {{ request('status') == '' ? 'selected' : '' }}>Tutti gli stati</option>
+                            <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>In elaborazione</option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completato</option>
+                            <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Fallito</option>
                         </select>
                     </div>
                 </div>
@@ -46,6 +46,7 @@
                                 <th>Filtri</th>
                                 <th>Utente</th>
                                 <th>Data Creazione</th>
+                                <th>DB Selezionato</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
@@ -67,8 +68,9 @@
                                         -
                                     @endif
                                 </td>
-                                <td>{{ $download->user ?? 'Sistema' }}</td>
+                                <td>{{ $download->user_id ?? 'Sistema' }}</td>
                                 <td>{{ $download->created_at->format('d/m/Y H:i') }}</td>
+                                <td>{{ $download->selectedDb ?? '-' }}</td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">

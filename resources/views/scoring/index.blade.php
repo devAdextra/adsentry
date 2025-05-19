@@ -249,7 +249,7 @@
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
       </div>
-      <div class="modal-body" id="downloadLeadsModalBody">
+      <div class="modal-body">
         <div class="text-center">
             <span class="spinner-border text-primary" id="db-list-spinner" style="display:none;" role="status"></span>
         </div>
@@ -351,6 +351,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.8.0/countUp.min.js"></script>
 <script>
 $(document).ready(function() {
+    window.lastDbList = [];
     console.log('✅ JS ESEGUITO');
 
     // Inizializza il grafico
@@ -429,7 +430,14 @@ $(document).ready(function() {
             console.log('URL richiesta:', url);
 
             const response = await fetch(url);
-            const data = await response.json();
+            const responseText = await response.text();
+            console.log('Risposta grezza:', responseText);
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                throw new Error('Risposta non JSON: ' + responseText);
+            }
             
             console.log(`Risposta per ${selectId}:`, data);
 
@@ -586,6 +594,7 @@ $(document).ready(function() {
                 theme: "dark",
                 y: {
                     formatter: function(val) {
+                        if (typeof val !== 'number' || isNaN(val)) return '-';
                         return val + " movimenti"
                     }
                 }
@@ -748,7 +757,8 @@ $(document).ready(function() {
                 });
 
                 console.log('Processed scores:', scores);
-
+            console.log('✅ Ricevuto:', data);
+            
                 // Filtra gli score >= 5% per grafico e etichette
                 const filteredScores = scores
                     .map((score, idx) => ({ ...score, idx })) // aggiungi indice per colore/label
@@ -779,6 +789,7 @@ $(document).ready(function() {
                                         fontSize: '12px',
                                         fontFamily: 'inherit',
                                         formatter: function (val) {
+                                            if (typeof val !== 'number' || isNaN(val)) return '-';
                                             return val.toFixed(1) + '%';
                                         }
                                     },
@@ -801,6 +812,8 @@ $(document).ready(function() {
                             formatter: function(value) {
                                 const scoreIndex = this.dataPointIndex;
                                 const score = scores[scoreIndex];
+                                const scoreObj = scores ? scores[scoreIndex] : undefined;
+                                if (!scoreObj) return '-';
                                 return `${score.count} lead (${value.toFixed(1)}%)`;
                             }
                         }
@@ -860,6 +873,8 @@ $(document).ready(function() {
                         });
                     });
                 }
+
+                window.lastDbList = data.db_list || [];
             }
         } catch (error) {
             console.error('Errore nell\'aggiornamento della distribuzione:', error);
@@ -868,58 +883,113 @@ $(document).ready(function() {
             document.getElementById('global-spinner-overlay').style.display = 'none';
         }
     }
-
-    // Assicurati che il grafico venga inizializzato quando la pagina è pronta
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded, initializing score distribution');
-        updateScoreDistribution();
-
         // Quando si apre il modal, carica i db disponibili
+        console.log('🤖 Init evento modal:', !!document.getElementById('downloadLeadsModal'));
+
         const downloadModal = document.getElementById('downloadLeadsModal');
         if (downloadModal) {
-            downloadModal.addEventListener('show.bs.modal', async function () {
-                console.log('Apertura modal downloadLeadsModal');
-                document.getElementById('db-list-spinner').style.display = 'inline-block';
-                document.getElementById('dbSelectionForm').innerHTML = '<div class="text-muted">TEST: Modal aperto</div>';
+            downloadModal.addEventListener('shown.bs.modal', function () {
+                document.getElementById('db-list-spinner').style.display = 'none'; // niente spinner, è istantaneo!
                 document.getElementById('downloadLeadsModalAlert').classList.add('d-none');
-
-                // Recupera i filtri attivi dalla pagina
-                const filters = {
-                    macro: document.getElementById('vertical-select').value,
-                    micro: document.getElementById('categoria-select').value,
-                    nano: document.getElementById('prodotto-select').value,
-                    extra: document.getElementById('extra-select').value,
-                    score: document.getElementById('selectedScoreLabel').textContent.replace('Score ', '')
-                };
-
-                try {
-                    const response = await fetch(`/adsentry/public/score/distribution?${new URLSearchParams(filters)}`);
-                    if (!response.ok) throw new Error('Errore nel recupero dei db');
-                    const data = await response.json();
-                    console.log('Risposta distribuzione:', data);
-
-                    const dbList = data.db_list || [];
-                    console.log('dbList:', dbList);
-
-                    if (dbList.length === 0) {
-                        document.getElementById('dbSelectionForm').innerHTML = '<div class="text-muted">Nessun db disponibile per i filtri selezionati.</div>';
-                    } else {
-                        document.getElementById('dbSelectionForm').innerHTML = dbList.map(db =>
-                            `<div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="${db}" id="db_${db}" name="dbs[]">
-                                <label class="form-check-label" for="db_${db}">${db}</label>
-                            </div>`
-                        ).join('');
-                    }
-                } catch (err) {
-                    document.getElementById('downloadLeadsModalAlert').textContent = 'Errore nel caricamento dei database disponibili.';
-                    document.getElementById('downloadLeadsModalAlert').classList.remove('d-none');
-                } finally {
-                    document.getElementById('db-list-spinner').style.display = 'none';
+                const dbList = window.lastDbList || [];
+                if (dbList.length === 0) {
+                    document.getElementById('dbSelectionForm').innerHTML = '<div class="text-muted">Nessun db disponibile per i filtri selezionati.</div>';
+                } else {
+                    document.getElementById('dbSelectionForm').innerHTML = dbList.map(db => `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" value="${db}" id="db_${db}" name="selectedDb">
+                            <label class="form-check-label" for="db_${db}">${db}</label>
+                        </div>
+                    `).join('');
                 }
             });
         }
+
+    // 1. Disabilita il bottone se nessun db è selezionato
+    $('#dbSelectionForm').on('change', 'input[type=radio]', function() {
+        $('#confirmDownloadLeadsBtn').prop('disabled', false);
     });
+
+    // 2. Reset selezione db e bottone ogni volta che si apre il modal
+    $('#downloadLeadsModal').on('show.bs.modal', function() {
+        $('#dbSelectionForm input[type=radio]').prop('checked', false);
+        $('#confirmDownloadLeadsBtn').prop('disabled', true);
+        $('#downloadLeadsModalAlert').addClass('d-none').text('');
+    });
+
+    // 3. Gestione click su Conferma Download
+    $('#confirmDownloadLeadsBtn').on('click', async function() {
+        const selectedDb = $('#dbSelectionForm input[type=radio]:checked').val();
+        if (!selectedDb) {
+            $('#downloadLeadsModalAlert')
+                .removeClass('d-none alert-success')
+                .addClass('alert-danger')
+                .text('Seleziona un database prima di confermare.');
+            return;
+        }
+
+        // Raccogli i filtri attivi
+        const filters = {
+            macro: $('#vertical-select').val(),
+            micro: $('#categoria-select').val(),
+            nano: $('#prodotto-select').val(),
+            extra: $('#extra-select').val(),
+            score: $('#selectedScoreLabel').text().replace('Score ', '')
+        };
+
+        try {
+            // Mostra spinner sul bottone
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+            // Invia la richiesta AJAX (modifica l'URL se necessario)
+            const response = await fetch('/adsentry/public/downloads', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    selectedDb: selectedDb,
+                    filters: filters
+                })
+            });
+
+            const responseText = await response.text();
+            console.log('Risposta grezza:', responseText);
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (e) {
+                throw new Error('Risposta non JSON: ' + responseText);
+            }
+
+            if (data.success) {
+                // Mostra messaggio di conferma
+                $('#downloadLeadsModalAlert')
+                    .removeClass('d-none alert-danger')
+                    .addClass('alert-success')
+                    .text('Il file sarà disponibile nella sezione Download.');
+
+                setTimeout(() => {
+                    $('#downloadLeadsModal').modal('hide');
+                    $('#downloadLeadsModalAlert').addClass('d-none').removeClass('alert-success').text('');
+                }, 2000);
+            } else {
+                throw new Error(data.message || 'Errore durante la richiesta.');
+            }
+        } catch (err) {
+            $('#downloadLeadsModalAlert')
+                .removeClass('d-none alert-success')
+                .addClass('alert-danger')
+                .text('Errore durante la richiesta: ' + err.message);
+            $(this).prop('disabled', false).text('Conferma Download');
+        } finally {
+            $(this).prop('disabled', false).text('Conferma Download');
+        }
+    });
+
+    console.log('CSRF token:', $('meta[name="csrf-token"]').attr('content'));
 });
 </script>
 @endpush

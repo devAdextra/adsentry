@@ -27,8 +27,7 @@ Route::get('/movements/monthly-stats', [App\Http\Controllers\Api\MovementControl
 
 Route::get('/score/distribution', [\App\Http\Controllers\Api\ScoreController::class, 'getDistribution']);
 
-Route::get('/score/download-filtered', [App\Http\Controllers\Api\ScoreController::class, 'downloadFilteredLeads'])->name('score.downloadFiltered');
-
 Route::get('/downloads', [DownloadController::class, 'index'])->name('downloads.index');
+Route::post('/downloads', [DownloadController::class, 'generate'])->name('downloads.generate');
 Route::get('/downloads/{download}', [DownloadController::class, 'download'])->name('downloads.download');
 Route::delete('/downloads/{download}', [DownloadController::class, 'destroy'])->name('downloads.destroy');

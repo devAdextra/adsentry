@@ -37,6 +37,8 @@
 
     <!-- ApexCharts -->
     <link href="{{ asset('assets/plugins/apexchart/apexcharts.css') }}" rel="stylesheet">
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
