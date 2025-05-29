@@ -23,18 +23,22 @@
             </a>
           </li>
           <li>
-            <a href="javascript:;" class="has-arrow">
-              <div class="parent-icon"><i class="material-icons-outlined">widgets</i>
-              </div>
-              <div class="menu-title">Widgets</div>
+            <a href="{{ route('scoring.index') }}">
+                <div class="parent-icon">
+                    <i class="material-icons-outlined">widgets</i>
+                </div>
+                <div class="menu-title">Scoring</div>
             </a>
-            <ul>
-              <li><a href="scoring"><i class="material-icons-outlined">arrow_right</i>Scoring</a>
-              </li>
-              <li><a href="upload"><i class="material-icons-outlined">arrow_right</i>Upload</a>
-              </li>
-            </ul>
           </li>
+          <li>
+            <a href="{{ route('upload.index') }}">
+                <div class="parent-icon">
+                    <i class="material-icons-outlined">upload</i>
+                </div>
+                <div class="menu-title">Upload</div>
+            </a>
+          </li>
+
           <li>
             <a href="{{ route('downloads.index') }}">
                 <div class="parent-icon">

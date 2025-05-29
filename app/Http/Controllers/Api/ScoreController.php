@@ -28,7 +28,7 @@ class ScoreController extends Controller
                 $query = "WITH FilteredUsers AS (
                     SELECT DISTINCT m.user_id
                     FROM movements m
-                    USE INDEX (idx_user_filters)
+                    USE INDEX (idx_filters)
                     WHERE 1=1";
                 
                 $params = [];

@@ -10,7 +10,7 @@
                         <img src="{{ asset('assets/images/avatars/01.png') }}" width="48" height="48" class="rounded-circle" alt="">
                     </div>
                     <div>
-                        <h6 class="mb-0">Welcome to Scoring</h6>
+                        <h6 class="mb-0">Welcome to Test Scoring</h6>
                         <p class="mb-0">Select your options</p>
                     </div>
                 </div>
@@ -20,7 +20,7 @@
 </div>
 
 <div class="row mt-4">
-    <div class="col-md-3">
+    <div class="col-md-6">
         <div class="card border shadow-none">
             <div class="card-header bg-light">
                 <h6 class="mb-0">Vertical</h6>
@@ -34,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-6">
         <div class="card border shadow-none">
             <div class="card-header bg-light">
                 <h6 class="mb-0">Categoria</h6>
@@ -42,34 +42,6 @@
             <div class="card-body">
                 <div class="mb-0">
                     <select id="categoria-select" class="form-select form-select-sm select2">
-                        <option value="Tutti">Tutti</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border shadow-none">
-            <div class="card-header bg-light">
-                <h6 class="mb-0">Prodotto</h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-0">
-                    <select id="prodotto-select" class="form-select form-select-sm select2">
-                        <option value="Tutti">Tutti</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border shadow-none">
-            <div class="card-header bg-light">
-                <h6 class="mb-0">Extra</h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-0">
-                    <select id="extra-select" class="form-select form-select-sm select2">
                         <option value="Tutti">Tutti</option>
                     </select>
                 </div>
@@ -363,9 +335,7 @@ $(document).ready(function() {
     // Definisci il mapping tra ID dei select e nomi dei campi
     const fieldMap = {
         'vertical-select': 'macro',
-        'categoria-select': 'micro',
-        'prodotto-select': 'nano',
-        'extra-select': 'extra'
+        'categoria-select': 'micro'
     };
 
     let chart = null;
@@ -426,7 +396,7 @@ $(document).ready(function() {
                 column: field
             };
             const queryString = costruisciQueryString(queryParams);
-            const url = `/adsentry-main/public/filter-options${queryString}`;
+            const url = `/adsentry/public/test/filter-options${queryString}`;
             console.log('URL richiesta:', url);
 
             const response = await fetch(url);
@@ -518,7 +488,7 @@ $(document).ready(function() {
     // Funzione per ottenere i dati del grafico
     async function updateChartData(filters = {}) {
         try {
-            const url = `${window.location.origin}/adsentry-main/public/movements/monthly-stats?${new URLSearchParams(filters)}`;
+            const url = `${window.location.origin}/adsentry/public/test/movements/monthly-stats?${new URLSearchParams(filters)}`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
@@ -637,7 +607,7 @@ $(document).ready(function() {
         try {
             console.log('Filtri attivi per volume totale:', filters);
             const queryString = costruisciQueryString(filters);
-            const url = `/adsentry-main/public/movements/unique-leads${queryString}`;
+            const url = `/adsentry/public/test/movements/unique-leads${queryString}`;
             console.log('URL richiesta volume totale:', url);
 
             const response = await fetch(url);
@@ -740,7 +710,7 @@ $(document).ready(function() {
         document.getElementById('global-spinner-overlay').style.display = 'flex';
         try {
             console.log('Fetching score distribution with filters:', filters);
-            const response = await fetch(`/adsentry-main/public/score/distribution?${new URLSearchParams(filters)}`);
+            const response = await fetch(`/adsentry/public/test/score/distribution?${new URLSearchParams(filters)}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             
             const data = await response.json();
@@ -932,8 +902,6 @@ $(document).ready(function() {
         const filters = {
             macro: $('#vertical-select').val(),
             micro: $('#categoria-select').val(),
-            nano: $('#prodotto-select').val(),
-            extra: $('#extra-select').val(),
             score: $('#selectedScoreLabel').text().replace('Score ', '')
         };
 
@@ -942,7 +910,7 @@ $(document).ready(function() {
             $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
 
             // Invia la richiesta AJAX (modifica l'URL se necessario)
-            const response = await fetch('/adsentry-main/public/downloads', {
+            const response = await fetch('/adsentry/public/downloads', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

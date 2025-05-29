@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en" data-bs-theme="light-theme">
 <head>
+    <!-- Disabilita i warning di SES -->
+    <script>
+        window.console.warn = function() {
+            if (arguments[0] && typeof arguments[0] === 'string') {
+                if (arguments[0].includes('SES') || arguments[0].includes('lockdown')) {
+                    return;
+                }
+            }
+            console.log.apply(console, arguments);
+        };
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name') }}</title>

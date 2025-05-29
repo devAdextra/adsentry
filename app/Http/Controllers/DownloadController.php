@@ -12,7 +12,7 @@ class DownloadController extends Controller
     {
         $downloads = Download::query()
             ->when($request->search, function($query, $search) {
-                $query->where('original_filename', 'like', "%{$search}%")
+                $query->where('filename', 'like', "%{$search}%")
                     ->orWhere('user', 'like', "%{$search}%");
             })
             ->when($request->status, function($query, $status) {
@@ -32,13 +32,18 @@ class DownloadController extends Controller
             'filters' => 'required|array',
         ]);
 
+        $filename = 'export_' . now()->format('Ymd_His') . '.csv';
+
         // Crea una riga download (stato: processing)
         $download = Download::create([
-            'original_filename' => 'export_' . now()->format('Ymd_His') . '.csv',
+            'filename' => $filename,
+            'original_filename' => $filename,
+            'path' => $filename,
             'filters' => $request->filters,
             'selectedDb' => $request->selectedDb,
-            'user_id' => auth()->id() ?? null,
+            'user' => auth()->id() ?? null,
             'status' => 'processing',
+            'expires_at' => now()->addDays(7), // Il file scadrà dopo 7 giorni
         ]);
 
         // Avvia un job per la generazione del file (opzionale, consigliato)
@@ -50,7 +55,7 @@ class DownloadController extends Controller
     public function destroy(Download $download)
     {
         // Elimina il file fisico
-        if (file_exists(storage_path('app/' . $download->path))) {
+        if ($download->path && file_exists(storage_path('app/' . $download->path))) {
             unlink(storage_path('app/' . $download->path));
         }
         
@@ -62,9 +67,9 @@ class DownloadController extends Controller
 
     public function download(Download $download)
     {
-        if ($download->status !== 'completed' || !$download->filename) {
+        if ($download->status !== 'completed' || !$download->path) {
             abort(404);
         }
-        return response()->download(storage_path('app/' . $download->filename));
+        return response()->download(storage_path('app/' . $download->path));
     }
 } 

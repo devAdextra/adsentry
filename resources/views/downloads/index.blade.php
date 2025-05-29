@@ -53,7 +53,7 @@
                         <tbody>
                             @foreach($downloads as $download)
                             <tr>
-                                <td>{{ $download->original_filename }}</td>
+                                <td>{{ $download->filename }}</td>
                                 <td>
                                     <span class="badge {{ $download->status_badge }}">
                                         {{ ucfirst($download->status) }}

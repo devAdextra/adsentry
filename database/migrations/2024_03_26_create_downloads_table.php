@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('downloads', function (Blueprint $table) {
             $table->id();
             $table->string('filename');
-            $table->string('original_filename');
             $table->string('path');
             $table->string('status')->default('processing'); // processing, completed, failed
             $table->json('filters')->nullable();
