@@ -90,4 +90,4 @@ class LeadScoringService
 
         return $results;
     }
-}
+} 

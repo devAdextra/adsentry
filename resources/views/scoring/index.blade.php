@@ -934,7 +934,7 @@ $(document).ready(function() {
             micro: $('#categoria-select').val(),
             nano: $('#prodotto-select').val(),
             extra: $('#extra-select').val(),
-            score: $('#selectedScoreLabel').text().replace('Score ', '')
+            score: parseInt(document.getElementById('selectedScoreLabel').textContent.split(' ')[1])
         };
 
         try {

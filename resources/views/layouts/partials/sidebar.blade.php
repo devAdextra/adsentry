@@ -47,6 +47,18 @@
                 <div class="menu-title">Downloads</div>
             </a>
           </li>
+
+          @if(auth()->check() && auth()->user()->isAdmin())
+          <li>
+            <a href="{{ route('users.index') }}">
+                <div class="parent-icon">
+                    <i class="material-icons-outlined">people</i>
+                </div>
+                <div class="menu-title">Utenti</div>
+            </a>
+          </li>
+          @endif
+          <!--
           <li class="menu-label">UI Elements</li>
           <li>
             <a class="has-arrow" href="javascript:;">
@@ -351,15 +363,7 @@
               </div>
               <div class="menu-title">Support</div>
             </a>
-          </li>
-          <li>
-            <a href="{{ route('downloads.index') }}">
-                <div class="parent-icon">
-                    <i class="material-icons-outlined">download</i>
-                </div>
-                <div class="menu-title">Downloads</div>
-            </a>
-          </li>
+          </li>-->
          </ul>
         <!--end navigation-->
     </div>

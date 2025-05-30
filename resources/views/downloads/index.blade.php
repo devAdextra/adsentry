@@ -47,6 +47,7 @@
                                 <th>Utente</th>
                                 <th>Data Creazione</th>
                                 <th>DB Selezionato</th>
+                                <th>Quantità Lead</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
@@ -71,6 +72,7 @@
                                 <td>{{ $download->user_id ?? 'Sistema' }}</td>
                                 <td>{{ $download->created_at->format('d/m/Y H:i') }}</td>
                                 <td>{{ $download->selectedDb ?? '-' }}</td>
+                                <td>{{ $download->total_records ?? '-' }}</td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
@@ -79,7 +81,7 @@
                                         <ul class="dropdown-menu">
                                             @if($download->status === 'completed')
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('downloads.download', $download) }}">
+                                                <a class="dropdown-item" href="{{ route('downloads.download', $download->id) }}" target="_blank">
                                                     <i class="material-icons-outlined">download</i> Scarica
                                                 </a>
                                             </li>

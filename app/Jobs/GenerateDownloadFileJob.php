@@ -11,7 +11,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class GenerateDownloadFileJob implements ShouldQueue
 {
@@ -42,8 +41,7 @@ class GenerateDownloadFileJob implements ShouldQueue
             // Log dettagliato dei risultati
             Log::info('Risultati query', [
                 'count' => count($leads),
-                'first_few' => array_slice($leads, 0, 5),
-                'query' => DB::getQueryLog()
+                'first_few' => array_slice($leads, 0, 5)
             ]);
 
             // Verifica che ci siano risultati
@@ -54,74 +52,40 @@ class GenerateDownloadFileJob implements ShouldQueue
                 ]);
             }
 
-            // Usa il path già salvato nel database
-            $path = storage_path('app/' . $this->download->path);
-            
             // Assicurati che la directory esista
-            if (!is_dir(dirname($path))) {
-                mkdir(dirname($path), 0777, true);
-            }
+            Storage::disk('downloads')->makeDirectory('');
 
-            // Apri il file in modalità scrittura
-            $handle = fopen($path, 'w');
-            if ($handle === false) {
-                throw new \Exception("Impossibile creare il file: {$path}");
-            }
-
-            // Scrivi l'intestazione
-            fputcsv($handle, ['Email', 'Database']);
+            // Genera il file CSV
+            $output = fopen('php://temp', 'r+');
             
-            // Scrivi i dati
-            $written = 0;
-            foreach ($leads as $lead) {
-                // Verifica che le proprietà esistano
-                if (!isset($lead->email) || !isset($lead->db)) {
-                    Log::warning('Record con proprietà mancanti', [
-                        'record' => $lead
-                    ]);
-                    continue;
-                }
+            // Intestazioni CSV
+            fputcsv($output, ['Email', 'DB']);
 
-                // I risultati sono oggetti stdClass, accediamo alle proprietà con ->
-                fputcsv($handle, [
+            // Dati
+            foreach ($leads as $lead) {
+                fputcsv($output, [
                     $lead->email,
                     $lead->db
                 ]);
-                $written++;
-            }
-            
-            // Chiudi il file
-            fclose($handle);
-
-            Log::info('File scritto', [
-                'path' => $path,
-                'records_written' => $written,
-                'total_records' => count($leads)
-            ]);
-
-            // Verifica che il file sia stato creato correttamente
-            if (!file_exists($path)) {
-                throw new \Exception("Il file non è stato creato correttamente: {$path}");
             }
 
-            // Verifica la dimensione del file
-            $fileSize = filesize($path);
-            Log::info('Dimensione file', [
-                'path' => $path,
-                'size' => $fileSize
-            ]);
+            rewind($output);
+            $csv = stream_get_contents($output);
+            fclose($output);
 
-            // Aggiorna il record del download
+            // Salva il file
+            Storage::disk('downloads')->put($this->download->filename, $csv);
+
+            // Aggiorna lo stato del download
             $this->download->update([
                 'status' => 'completed',
-                'total_records' => $written
+                'total_records' => count($leads)
             ]);
 
             Log::info('File generato con successo', [
                 'download_id' => $this->download->id,
-                'path' => $path,
-                'total_records' => $written,
-                'file_size' => $fileSize
+                'filename' => $this->download->filename,
+                'total_records' => count($leads)
             ]);
 
         } catch (\Exception $e) {

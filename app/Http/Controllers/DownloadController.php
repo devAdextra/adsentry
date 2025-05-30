@@ -54,9 +54,10 @@ class DownloadController extends Controller
 
     public function destroy(Download $download)
     {
-        // Elimina il file fisico
-        if ($download->path && file_exists(storage_path('app/' . $download->path))) {
-            unlink(storage_path('app/' . $download->path));
+        // Elimina il file fisico dalla cartella downloads
+        $filePath = storage_path('app/downloads/' . $download->path);
+        if ($download->path && file_exists($filePath)) {
+            unlink($filePath);
         }
         
         $download->delete();
@@ -70,6 +71,11 @@ class DownloadController extends Controller
         if ($download->status !== 'completed' || !$download->path) {
             abort(404);
         }
-        return response()->download(storage_path('app/' . $download->path));
+        // Cerca sempre nella sottocartella downloads/
+        $filePath = storage_path('app/downloads/' . $download->path);
+        if (!file_exists($filePath)) {
+            abort(404, 'File non trovato');
+        }
+        return response()->download($filePath);
     }
 } 
