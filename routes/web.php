@@ -29,8 +29,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/download-all-movements', [DashboardController::class, 'downloadAllMovements'])->name('dashboard.downloadAll');
     Route::get('/dashboard/downloads', [DashboardController::class, 'listDownloads'])->name('dashboard.listDownloads');
 
-    Route::get('/upload', [UploadController::class, 'showUploadForm'])->name('upload.index');
-    Route::post('/upload', [UploadController::class, 'handleUpload'])->name('upload.handle');
+    Route::get('/upload', [UploadController::class, 'index'])->name('upload.index');
+    Route::post('/upload', [UploadController::class, 'store'])->name('upload.store');
+    Route::get('/upload/{upload}/download', [UploadController::class, 'download'])->name('upload.download');
+    Route::delete('/upload/{upload}', [UploadController::class, 'destroy'])->name('upload.destroy');
+
+    Route::get('/upload/manual', [UploadController::class, 'manualUploads'])->name('upload.manual');
+    Route::post('/upload/manual/process', [UploadController::class, 'processManualUpload'])->name('upload.manual.process');
 
     Route::get('/scoring', [ScoringController::class, 'index'])->name('scoring.index');
 

@@ -58,6 +58,17 @@
             </a>
           </li>
           @endif
+
+          @if(auth()->check() && auth()->user()->isAdmin())
+          <li>
+            <a href="{{ route('upload.manual') }}">
+                <div class="parent-icon">
+                    <i class="material-icons-outlined">people</i>
+                </div>
+                <div class="menu-title">Upload Manuale</div>
+            </a>
+          </li>
+          @endif
           <!--
           <li class="menu-label">UI Elements</li>
           <li>

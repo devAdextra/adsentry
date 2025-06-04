@@ -20,6 +20,7 @@ class Movement extends Model
         'micro',
         'nano',
         'extra',
+        'db',
         'timeActionOpen',
         'timeActionClose'
         // e così via, in base alle tue colonne

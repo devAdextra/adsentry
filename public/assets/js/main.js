@@ -2,8 +2,12 @@ $(function () {
   "use strict";
 
   /* scrollar */
-  new PerfectScrollbar(".notify-list")
-  new PerfectScrollbar(".search-content")
+  if (document.querySelector('.notify-list')) {
+    new PerfectScrollbar('.notify-list');
+  }
+  if (document.querySelector('.search-content')) {
+    new PerfectScrollbar('.search-content');
+  }
   // new PerfectScrollbar(".mega-menu-widgets")
 
   /* toggle button */
@@ -18,7 +22,7 @@ $(function () {
   });
 
   /* menu */
-  $("#sidenav").metisMenu();
+  //$("#sidenav").metisMenu();
 
   /* sidebar close button */
   $(".sidebar-close").on("click", function () {
