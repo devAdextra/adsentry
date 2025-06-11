@@ -189,4 +189,65 @@ class ScoreController extends Controller
         $leads = $scoringService->getLeadsByScore($filters, $selectedDb);
         return response()->json(['leads' => $leads]);
     }
+
+    public function dbDistributionByScore(Request $request)
+    {
+        $score = $request->input('score');
+        $filters = $request->only(['macro', 'micro', 'nano', 'extra']);
+
+        $query = "WITH FilteredUsers AS (
+            SELECT DISTINCT m.user_id
+            FROM movements m
+            USE INDEX (idx_filters)
+            WHERE 1=1";
+        $params = [];
+        foreach (['macro', 'micro', 'nano', 'extra'] as $field) {
+            if (!empty($filters[$field]) && $filters[$field] !== 'Tutti') {
+                $query .= " AND m.$field = ?";
+                $params[] = $filters[$field];
+            }
+        }
+        $query .= "),
+        UserActions AS (
+            SELECT 
+                m.user_id,
+                m.db,
+                COUNT(DISTINCT CASE WHEN m.timeActionOpen IS NOT NULL THEN m.timeActionOpen END) as open_count,
+                COUNT(DISTINCT CASE WHEN m.timeActionClick IS NOT NULL THEN m.timeActionClick END) as click_count
+            FROM movements m
+            INNER JOIN FilteredUsers fu ON m.user_id = fu.user_id
+            GROUP BY m.user_id, m.db
+        ),
+        ScoreCalculation AS (
+            SELECT 
+                user_id,
+                db,
+                CASE
+                    WHEN (open_count + (click_count * 2)) = 0 THEN 1
+                    WHEN (open_count + (click_count * 2)) <= 5 THEN 2
+                    WHEN (open_count + (click_count * 2)) <= 10 THEN 3
+                    WHEN (open_count + (click_count * 2)) <= 20 THEN 4
+                    WHEN (open_count + (click_count * 2)) <= 35 THEN 5
+                    WHEN (open_count + (click_count * 2)) <= 50 THEN 6
+                    WHEN (open_count + (click_count * 2)) <= 75 THEN 7
+                    WHEN (open_count + (click_count * 2)) <= 100 THEN 8
+                    ELSE 9
+                END as score_group
+            FROM UserActions
+        )
+        SELECT db, COUNT(*) as count
+        FROM ScoreCalculation
+        WHERE score_group = ?
+        GROUP BY db
+        ORDER BY count DESC";
+
+        $params[] = $score;
+
+        $results = \DB::select($query, $params);
+
+        return response()->json([
+            'success' => true,
+            'distribution' => $results
+        ]);
+    }
 }

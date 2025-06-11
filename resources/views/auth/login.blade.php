@@ -77,14 +77,14 @@
                                             <label class="form-check-label" for="remember">Ricordami</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 text-end">
+                                    <div class="col-md-6 "><br>
                                         @if (Route::has('password.request'))
                                             <a href="{{ route('password.request') }}">Password dimenticata?</a>
                                         @endif
                                     </div>
                                     <div class="col-12">
                                         <div class="d-grid">
-                                            <button type="submit" class="btn btn-grd-primary">Accedi</button>
+                                            <button type="submit" class="btn btn-grd-primary" style="color: white !important;">Accedi</button>
                                         </div>
                                     </div>
                                 </form>

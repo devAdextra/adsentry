@@ -13,6 +13,9 @@ use App\Http\Controllers\UserController;
 
 // Rotte pubbliche
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard.index');
+    }
     return view('welcome');
 });
 
@@ -42,11 +45,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/filter-options', [FilterController::class, 'getFilterOptions'])->name('filter.options');
     Route::get('/movements/monthly-stats', [MovementController::class, 'monthlyStats']);
     Route::get('/score/distribution', [ScoreController::class, 'getDistribution']);
+    Route::get('/score/db-distribution', [ScoreController::class, 'dbDistributionByScore']);
 
     Route::get('/downloads', [DownloadController::class, 'index'])->name('downloads.index');
     Route::post('/downloads', [DownloadController::class, 'generate'])->name('downloads.generate');
     Route::get('/downloads/{download}', [DownloadController::class, 'download'])->name('downloads.download');
     Route::delete('/downloads/{download}', [DownloadController::class, 'destroy'])->name('downloads.destroy');
+
+    Route::post('/upload/process', [UploadController::class, 'processFile'])->name('upload.process');
+    Route::get('/upload/progress/{filename}', [UploadController::class, 'getProgress'])->name('upload.progress');
 });
 
 // Rotte per la gestione degli utenti (solo admin)

@@ -111,12 +111,13 @@
                     <div class="selected-score-details ms-4" style="min-width: 200px;">
                         <div>
                             <p class="mb-1 text-muted">Categoria Selezionata</p>
-                            <h4 class="mb-2" id="selectedScoreLabel">Score 9</h4>
+                            <h4 class="mb-2" id="selectedScoreLabel">-</h4>
                             <p class="mb-2">Distribution Details</p>
                             <div class="d-flex align-items-center gap-2">
-                                <h3 class="mb-0" id="selectedScorePercent">35%</h3>
-                                <span class="badge bg-success" id="selectedScoreDelta">+12.5%</span>
+                                <h3 class="mb-0" id="selectedScorePercent">-</h3>
+                                <span class="badge bg-success" id="selectedScoreDelta" style="display:none;"></span>
                             </div>
+                            <div id="db-distribution-bar" class="mt-3"></div>
                         </div>
                     </div>
                 </div>
@@ -265,6 +266,7 @@
     </div>
   </div>
 </div>
+
 
 <style>
 .position-relative {
@@ -864,12 +866,101 @@ $(document).ready(function() {
 
                     // Handler per selezione score
                     Array.from(labelsContainer.querySelectorAll('.score-label-item')).forEach(el => {
-                        el.addEventListener('click', function() {
+                        el.addEventListener('click', async function() {
                             const scoreIdx = parseInt(this.getAttribute('data-score'), 10) - 1;
                             document.getElementById('selectedScoreLabel').textContent = `Score ${scoreIdx + 1}`;
                             document.getElementById('selectedScorePercent').textContent = `${scores[scoreIdx].percentage}%`;
-                            // Aggiorna delta se hai il dato, altrimenti nascondi
-                            // document.getElementById('selectedScoreDelta').textContent = ...;
+
+                            // Mostra overlay spinner
+                            document.getElementById('global-spinner-overlay').style.display = 'flex';
+
+                            // Recupera i filtri attivi
+                            const filters = {
+                                macro: $('#vertical-select').val(),
+                                micro: $('#categoria-select').val(),
+                                nano: $('#prodotto-select').val(),
+                                extra: $('#extra-select').val(),
+                                score: scoreIdx + 1
+                            };
+
+                            // Chiamata AJAX per la distribuzione per db
+                            try {
+                                const response = await fetch(`/adsentry-main/public/score/db-distribution?${new URLSearchParams(filters)}`);
+                                const data = await response.json();
+                                if (data.success) {
+                                    const total = data.distribution.reduce((sum, item) => sum + item.count, 0);
+                                    // Palette colori (puoi aggiungere altri colori se hai più DB)
+                                    const dbColors = [
+                                        '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14', '#20c997', '#6610f2', '#e83e8c'
+                                    ];
+                                    // Barra unica a segmenti
+                                    let offset = 0;
+                                    const barSegments = data.distribution.map((item, idx) => {
+                                        const percent = (item.count / total) * 100;
+                                        const color = dbColors[idx % dbColors.length];
+                                        const left = offset;
+                                        offset += percent;
+                                        return `<div class="db-bar-segment" 
+                                                    title="${item.count} lead" 
+                                                    style="background:${color};width:${percent}%;height:24px;float:left;cursor:pointer;"
+                                                    data-db="${item.db}" data-lead="${item.count}" data-percent="${percent.toFixed(1)}">
+                                                </div>`;
+                                    }).join('');
+                                    // Etichette sotto la barra
+                                    const labels = data.distribution.map((item, idx) => {
+                                        const percent = (item.count / total) * 100;
+                                        const color = dbColors[idx % dbColors.length];
+                                        return `<span class="db-label" style="display:inline-block;margin-right:16px;margin-top:8px;">
+                                            <span style="display:inline-block;width:12px;height:12px;background:${color};border-radius:2px;margin-right:4px;"></span>
+                                            <span style="font-weight:bold;">${item.db}</span> <span style="color:#888;">${percent.toFixed(1)}%</span>
+                                        </span>`;
+                                    }).join('');
+                                    document.getElementById('db-distribution-bar').innerHTML = `
+                                        <div class="db-bar-unique" style="width:100%;min-width:180px;max-width:320px;position:relative;overflow:hidden;border-radius:6px;border:1px solid #eee;">
+                                            ${barSegments}
+                                        </div>
+                                        <div class="db-labels" style="margin-top:8px;">${labels}</div>
+                                    `;
+                                    // Tooltip personalizzato (semplice)
+                                    const segments = document.querySelectorAll('.db-bar-segment');
+                                    segments.forEach(seg => {
+                                        seg.addEventListener('mouseenter', function(e) {
+                                            const tooltip = document.createElement('div');
+                                            tooltip.className = 'db-tooltip';
+                                            tooltip.style.position = 'fixed';
+                                            tooltip.style.background = '#222';
+                                            tooltip.style.color = '#fff';
+                                            tooltip.style.padding = '4px 10px';
+                                            tooltip.style.borderRadius = '4px';
+                                            tooltip.style.fontSize = '13px';
+                                            tooltip.style.pointerEvents = 'none';
+                                            tooltip.style.zIndex = 9999;
+                                            tooltip.textContent = `${this.getAttribute('data-lead')} lead`;
+                                            document.body.appendChild(tooltip);
+                                            function moveTooltip(ev) {
+                                                tooltip.style.left = (ev.clientX + 10) + 'px';
+                                                tooltip.style.top = (ev.clientY + 10) + 'px';
+                                            }
+                                            moveTooltip(e);
+                                            this._moveTooltip = moveTooltip;
+                                            this._tooltip = tooltip;
+                                            this.addEventListener('mousemove', moveTooltip);
+                                        });
+                                        seg.addEventListener('mouseleave', function() {
+                                            if (this._tooltip) {
+                                                this.removeEventListener('mousemove', this._moveTooltip);
+                                                document.body.removeChild(this._tooltip);
+                                                this._tooltip = null;
+                                            }
+                                        });
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Errore caricamento distribuzione DB:', error);
+                            } finally {
+                                // Nascondi overlay spinner
+                                document.getElementById('global-spinner-overlay').style.display = 'none';
+                            }
                         });
                     });
                 }

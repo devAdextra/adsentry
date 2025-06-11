@@ -13,7 +13,11 @@ class Upload extends Model
         'file_size',
         'mime_type',
         'upload_at',
-        'processed_at'
+        'processed_at',
+        'progress',
+        'status',
+        'lead_processed',
+        'movements_created'
     ];
 
     protected $casts = [

@@ -7,15 +7,15 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     <!--=====TITLE=======-->
-    <title>ADSentry || The New Era of Programmatic || Home</title>
+    <title>ADSentry || The New Era of Programmatic</title>
 
     <!--=====FAV ICON=======-->
-    <link rel="shortcut icon" href="{{ asset('assets/images/logo/favicon.png') }}">
+    <link rel="icon" href="{{ asset('assets/images/favicon.png') }}" type="image/png">
 
     <!--=====CSS=======-->
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/swiper.bundle.css') }}">
-    <!-- <link rel="stylesheet" href="{{ asset('assets/css/plugins/fontawesome.css') }}"> -->
+    <link rel="stylesheet" href="{{ asset('assets/css/plugins/fontawesome.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/mobile.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/magnific-popup.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/plugins/slick-slider.css') }}">
@@ -26,16 +26,12 @@
 
     <!--=====JQUERY=======-->
     <script src="{{ asset('assets/js/jquery-3-6-0.min.js') }}"></script>
-    <style>body, h1, h2, h3, h4, h5, h6, p, a, span, div {
-  font-family: Arial, sans-serif !important;
-  color: #111 !important;
-}
-    </style>
+    
 </head>
 
 <body>
     <!--===== PRELOADER STARTS =======-->
-    <div id="preloader">
+   <div id="preloader">
         <div class="preloader">
             <span></span>
             <span></span>
@@ -68,7 +64,7 @@
                                 </div>
                                 <div class="main-menu">
 
-                                    <a href="https://ad-sentry.com/login.php" class="header-btn2">Login</a>
+                                    <a href="{{ route('login') }}" class="header-btn2">Login</a>
                                     <a href="contact.html" class="header-btn3">Contattaci</a>
                                 </div>
                             </div>
@@ -547,6 +543,32 @@
     </script>
     <script type="text/javascript" src="https://cs.iubenda.com/autoblocking/3894729.js"></script>
     <script type="text/javascript" src="//cdn.iubenda.com/cs/iubenda_cs.js" charset="UTF-8" async></script>
+    <style>
+        /* Forza la visibilità del testo */
+        body, h1, h2, h3, h4, h5, h6, p, span, a {
+        }
+        
+        /* Assicurati che le animazioni AOS funzionino */
+        [data-aos] {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    </style>
+    <script>
+        // Nascondi il preloader quando la pagina è completamente caricata
+        window.addEventListener('load', function() {
+            var preloader = document.getElementById('preloader');
+            if (preloader) {
+                preloader.style.display = 'none';
+            }
+        });
+
+        // Inizializza AOS per le animazioni
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
 </body>
 
 </html>
