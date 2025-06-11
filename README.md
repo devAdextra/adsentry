@@ -1,66 +1,75 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AdsEntry - Gestione Lead, Movimenti e Scoring
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+AdsEntry è una piattaforma web sviluppata in Laravel per la gestione avanzata di file CSV, lead, movimenti e analisi di scoring. Il sistema permette di caricare, processare, analizzare e scaricare dati in modo semplice e intuitivo tramite un'interfaccia moderna.
 
-## About Laravel
+## Funzionalità principali
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Upload e gestione file CSV**: Carica file CSV tramite interfaccia o inserimento manuale nella cartella `uploads`. I file possono essere processati per generare movimenti e lead.
+- **Processamento asincrono**: I file vengono processati tramite job in background, con barra di avanzamento e stato visibile in tempo reale.
+- **Dashboard**: Statistiche aggregate su lead, movimenti e attività recenti.
+- **Scoring e analisi**: Visualizza la distribuzione degli score, filtra per variabili (macro, micro, nano, extra), analizza la distribuzione per database e per periodo.
+- **Download**: Esporta lead filtrati in CSV, con selezione del database e filtri avanzati.
+- **Gestione utenti**: Supporto multiutente con autenticazione.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Come usare il progetto
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Requisiti
+- PHP >= 8.0
+- Composer
+- Database MySQL/MariaDB
+- Node.js/NPM (per asset frontend, opzionale)
 
-## Learning Laravel
+### 2. Installazione
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. Clona il repository:
+   ```bash
+   git clone <repo-url>
+   cd adsentry-main
+   ```
+2. Installa le dipendenze PHP:
+   ```bash
+   composer install
+   ```
+3. Copia il file di esempio delle variabili ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+4. Configura le variabili nel file `.env` (DB, mail, ecc.)
+5. Genera la chiave applicativa:
+   ```bash
+   php artisan key:generate
+   ```
+6. Esegui le migration per creare le tabelle:
+   ```bash
+   php artisan migrate
+   ```
+7. (Opzionale) Compila gli asset frontend:
+   ```bash
+   npm install && npm run dev
+   ```
+8. Avvia il server di sviluppo:
+   ```bash
+   php artisan serve
+   ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 3. Utilizzo
+- Accedi all'applicazione da browser (`http://localhost:8000` o URL configurato).
+- Carica file CSV dalla sezione "Gestione File CSV".
+- Processa i file per generare movimenti e lead.
+- Analizza i dati tramite la dashboard e la sezione scoring.
+- Scarica i lead filtrati dalla sezione download.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 4. Note tecniche
+- I file caricati vengono salvati in `storage/app/uploads`.
+- Il processamento aggiorna lo stato e la barra di avanzamento in tempo reale.
+- La distribuzione scoring e per database è visualizzata con grafici interattivi.
+- Il sistema supporta job in background (configura la coda per produzione).
 
-## Laravel Sponsors
+## Struttura principale del progetto
+- `app/Models/` — Modelli Eloquent (Lead, Movement, Upload, Download, User)
+- `app/Http/Controllers/` — Controller web e API
+- `resources/views/` — Blade templates per upload, scoring, dashboard, download
+- `database/migrations/` — Migration per tabelle principali (users, uploads, movements, downloads)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Licenza
+Questo progetto è distribuito sotto licenza MIT.
